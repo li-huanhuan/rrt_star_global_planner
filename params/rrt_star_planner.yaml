@@ -1,0 +1,109 @@
+RRTstarPlannerROS:
+    search_radius: 2.0 #搜索附近的节点的搜索范围
+    goal_radius: 0.2  #认为搜索到目标点的范围
+    epsilon_min: 0.001 #节点之间的最小允许距离
+    epsilon_max: 0.1 #节点之间的最大允许距离
+    max_nodes_num: 2000000000.0 #节点数的最大值，最大迭代次数
+
+global_costmap:
+    global_frame: map
+    robot_base_frame: base_footprint
+    update_frequency: 1.0
+    publish_frequency: 1.0
+    rolling_window: false
+    resolution: 0.05
+    transform_tolerance: 10.0
+    track_unknown_space: true
+    robot_radius: 0.3
+
+    plugins:
+      - {name: static_layer,            type: "costmap_2d::StaticLayer"}
+      - {name: obstacle_layer,          type: "costmap_2d::ObstacleLayer"}
+      - {name: inflation_layer,         type: "costmap_2d::InflationLayer"}
+
+    obstacle_layer:
+        enabled: true
+
+        # These parameters apply to all sensors.
+        obstacle_range: 5.0
+        max_obstacle_height: 1.5  # assume something like an arm is mounted on top of the robot
+        raytrace_range: 10.0
+
+        # These parameters are used by the ObstacleCostmapPlugin.
+        track_unknown_space:  true        #true needed for disabling global path planning through unknown space
+        footprint_clearing_enabled: true
+        combination_method: 1
+
+        # The following parameters are used by the VoxelCostmapPlugin.
+        origin_z:             0.0
+        z_resolution:         1.0
+        z_voxels:             2
+        unknown_threshold:    15
+        mark_threshold:       0
+        publish_voxel_map: false
+        footprint_clearing_enabled: true
+
+        observation_sources:  scan_matched #scan
+        scan_matched:
+           # sensor_frame: laser
+           data_type: PointCloud2
+           topic: /scan_matched_points2
+           marking: true
+           clearing: true
+           observation_persistence: 0.0
+           expected_update_rate: 0.0
+           min_obstacle_height: 0.0
+           max_obstacle_height: 1.5
+           obstacle_range: 3.0
+           raytrace_range: 10.0
+
+        scan:
+            # sensor_frame: laser
+            data_type: LaserScan
+            topic: scan
+            marking: true
+            clearing: true
+            observation_persistence: 0.0
+            expected_update_rate: 0.0
+            min_obstacle_height: 0.0
+            max_obstacle_height: 1.5
+            obstacle_range: 3.0
+            raytrace_range: 10.0
+            inf_is_valid: true
+
+    inflation_layer:
+        enabled: true
+        cost_scaling_factor:  1.0 #exponential rate at which the obstacle cost drops off (default: 10)
+        inflation_radius:     0.3
+
+    static_layer:
+        enabled: true
+        lethal_cost_threshold: 100 #20
+        map_topic: map
+        first_map_only: false
+        track_unknown_space: true
+        trinary_costmap: true
+
+GlobalPlanner:
+  allow_unknown: false                           # Allow planner to plan through unknown space, default true
+  default_tolerance: 0.5                        # If goal in obstacle, plan to the closest point in radius default_tolerance, default 0.0
+  visualize_potential: false
+  old_navfn_behavior: false                     # Exactly mirror behavior of navfn, use defaults for other boolean parameters, default false
+  use_quadratic: true                           # Use the quadratic approximation of the potential. Otherwise, use a simpler calculation, default true
+  use_dijkstra: true                            # Use dijkstra's algorithm. Otherwise, A*, default true
+  use_grid_path: false                          # Create a path that follows the grid boundaries. Otherwise, use a gradient descent method, default false
+
+                                                #Needs to have track_unknown_space: true in the obstacle / voxel layer (in costmap_commons_param) to work
+  planner_window_x: 0.0                         # default 0.0
+  planner_window_y: 0.0                         # default 0.0
+
+  publish_scale: 100                            # Scale by which the published potential gets multiplied, default 100
+
+  lethal_cost: 253                              # default 253
+  neutral_cost: 50                              # default 50
+  cost_factor: 3.0                              # Factor to multiply each cost from costmap by, default 3.0
+  publish_potential: true                      # 是否发布地图中的搜索过的可行域, default true
+
+
+
+

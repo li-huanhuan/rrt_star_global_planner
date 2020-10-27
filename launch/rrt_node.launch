@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- 此文件单独测试rrt路径规划使用 -->
+<launch>
+
+  <node pkg="map_server" name="map_server" type="map_server" args="$(find rrt_star_global_planner)/maps/map1.yaml"/>
+  <node pkg="tf" type="static_transform_publisher" name="map_odom_broadcaster" args="0 0 0 0 0 0 1 /map /odom 100" />
+
+<!--测试rrt全局规划器-->
+  <node pkg="rrt_star_global_planner" type="rrt_star_planner" respawn="false" name="rrt_star_planner" output="screen">
+    <rosparam file="$(find rrt_star_global_planner)/params/rrt_star_planner.yaml" command="load" />
+  </node>
+
+<!--测试dijkstra全局规划器-->
+<!--
+  <node pkg="global_planner" type="planner" respawn="false" name="planner" output="screen">
+    <rosparam file="$(find rrt_star_global_planner)/params/rrt_star_planner.yaml" command="load" />
+  </node>
+-->
+
+</launch>
+
