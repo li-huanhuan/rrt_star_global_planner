@@ -45,6 +45,7 @@ namespace RRTstar_planner
       private_nh.param("epsilon_min",epsilon_min_,0.001); //节点之间的最小允许距离
       private_nh.param("epsilon_max",epsilon_max_,0.1); //节点之间的最大允许距离
       private_nh.param("max_nodes_num",max_nodes_num_tem,2000000000.0); //节点数的最大值，最大迭代次数
+      private_nh.param("plan_time_out",plan_time_out_,10.0); //规划超时。默认10s
       max_nodes_num_ = static_cast<size_t>(max_nodes_num_tem);
 
       //路径优化参数
@@ -107,6 +108,20 @@ namespace RRTstar_planner
                                    const geometry_msgs::PoseStamped& goal,
                                    std::vector<geometry_msgs::PoseStamped>& plan)
   {
+    plan.clear();
+
+    if(this->collision(start.pose.position.x, start.pose.position.y))
+    {
+      ROS_WARN("failed to get a path.start point is obstacle.");
+      return false;
+    }
+
+    if(this->collision(goal.pose.position.x, goal.pose.position.y))
+    {
+      ROS_WARN("failed to get a path.goal point is obstacle.");
+      return false;
+    }
+
     this->marker_tree_.points.clear();
     this->marker_tree_2_.points.clear();
     plan.clear();
@@ -144,6 +159,11 @@ namespace RRTstar_planner
     double start_time = ros::Time::now().toSec();
     while (ros::ok() && nodes.size() + nodes_2.size() < max_nodes_num_)
     {
+      if( (ros::Time::now().toSec()-start_time) > plan_time_out_)
+      {
+        ROS_WARN("failed to get a path.time out.");
+        return false;
+      }
       // 第一棵树
       while (ros::ok())
       {
@@ -616,7 +636,7 @@ namespace RRTstar_planner
       mx = rand() % map_size_x;
       srand(ros::Time::now().toNSec() + seed++);//修改种子
       my = rand() % map_size_y;
-      if(this->costmap_->getCost(mx,my) == costmap_2d::FREE_SPACE)
+      if(this->costmap_->getCost(mx,my) < costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
         break;
     }
     this->costmap_->mapToWorld(mx,my,wx,wy);
@@ -633,7 +653,7 @@ namespace RRTstar_planner
       return true;
     if ((mx >= costmap_->getSizeInCellsX()) || (my >= costmap_->getSizeInCellsY()))
       return true;
-    if (costmap_->getCost(mx, my) != costmap_2d::FREE_SPACE)
+    if (costmap_->getCost(mx, my) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
       return true;
     return false;
   }
@@ -653,7 +673,7 @@ namespace RRTstar_planner
       {
         x = static_cast<int>(mx) + i;
         y = static_cast<int>(my) + j;
-        if(this->costmap_->getCost(static_cast<unsigned int>(x),static_cast<unsigned int>(y)) != costmap_2d::FREE_SPACE)
+        if(this->costmap_->getCost(static_cast<unsigned int>(x),static_cast<unsigned int>(y)) >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
           return false;
       }
     }

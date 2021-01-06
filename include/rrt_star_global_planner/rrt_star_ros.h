@@ -197,6 +197,7 @@ namespace RRTstar_planner
       ros::Publisher marker_pub_;
 
       size_t max_nodes_num_;
+      double plan_time_out_;
       double search_radius_;
       double goal_radius_;
       double epsilon_min_;
