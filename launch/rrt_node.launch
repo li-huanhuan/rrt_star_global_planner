@@ -13,7 +13,7 @@
 
   <!--启动rrt全局规划器-->
   <node pkg="rrt_star_global_planner" type="rrt_star_planner" respawn="false" name="rrt_star_planner" output="screen">
-    <rosparam file="$(find rrt_star_global_planner)/params/rrt_star_planner.yaml" command="load" />
+    <rosparam file="$(find rrt_star_global_planner)/params/test_rrt_star_planner.yaml" command="load" />
   </node>
 
 </launch>
